@@ -22,7 +22,7 @@ double dt = 0.05;
 const double Lf = 2.67;
 
 // Set a Reference Velocity to which the cost is related
-double ref_v = 70;
+double ref_v = 100;
 
 // Defintion of position of all state variables and actuators. The optimser
 // takes all variables as one vector
@@ -48,6 +48,78 @@ class FG_eval {
     // `fg` a vector of the cost constraints, `vars` is a vector of variable values (state & actuators)
     // NOTE: You'll probably go back and forth between this function and
     // the Solver function below.
+    
+    // The cost for the fucntion is stored in the first element of fg.
+    // All cost to be added to this element.
+      fg[0] = 0;
+      
+      // Add all reference state related cost to fg
+      for(int t = 0; t < N; t++){
+          fg[0] += CppAD::pow(vars[cte_start + t], 2);
+          fg[0] += CppAD::pow(vars[epsi_start + t], 2);
+          fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
+      }
+      
+      // We want to minimize the actuator use. This means too much steering or
+      // throttle is a problem that can cause oscillation. Adding them to cost
+      // The loop is between N-1 becasue the throttle is applied between every
+      // time step.
+      for(int t = 0; t < N-1; t++){
+          fg[0] += CppAD::pow(vars[delta_start + t], 2);
+          fg[0] += CppAD::pow(vars[a_start + t], 2);
+      }
+      
+      // Minimize the value gap between actuation.
+      for(int t = 0; t < N-2; t++){
+          fg[0] += CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
+          fg[0] += CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
+      }
+      
+      // Setup Model Constraints
+      // Initial Constraints
+      // In fg values start from 1 since 0 has the cost. So bump fg index by 1
+      fg[1 + x_start] = vars[x_start];
+      fg[1 + y_start] = vars[y_start];
+      fg[1 + psi_start] = vars[psi_start];
+      fg[1 + v_start] = vars[v_start];
+      fg[1 + cte_start] = vars[cte_start];
+      fg[1 + epsi_start] = vars[epsi_start];
+      
+      // Setup other constraints. Calculate the kinematic model for state t+1.
+      // this will be the next constraints. starting from 1
+      for(int t = 1; t < N; t++){
+          // Time t = 1
+          AD<double> x1 = vars[x_start + t];
+          AD<double> y1 = vars[y_start + t];
+          AD<double> psi1 = vars[psi_start + t];
+          AD<double> v1 = vars[v_start + t];
+          AD<double> cte1 = vars[cte_start + t];
+          AD<double> epsi1 = vars[epsi_start + t];
+          
+          // Time t = 0
+          AD<double> x0 = vars[x_start + t - 1];
+          AD<double> y0 = vars[y_start + t - 1];
+          AD<double> psi0 = vars[psi_start + t - 1];
+          AD<double> v0 = vars[v_start + t - 1];
+          AD<double> cte0 = vars[cte_start + t - 1];
+          AD<double> epsi0 = vars[epsi_start + t - 1];
+          
+          // Actuators betweeen time t = 0 and t = 1
+          AD<double> delta0 = vars[delta_start + t - 1];
+          AD<double> a0 = vars[a_start + t - 1];
+          
+          
+          
+          // The equations for the model:
+          // x_[t+1] = x[t] + v[t] * cos(psi[t]) * dt
+          // y_[t+1] = y[t] + v[t] * sin(psi[t]) * dt
+          // psi_[t+1] = psi[t] + v[t] / Lf * delta[t] * dt
+          // v_[t+1] = v[t] + a[t] * dt
+          // cte[t+1] = f(x[t]) - y[t] + v[t] * sin(epsi[t]) * dt
+          // epsi[t+1] = psi[t] - psides[t] + v[t] * delta[t] / Lf * dt
+          
+      }
+      
   }
 };
 
