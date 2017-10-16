@@ -6,8 +6,8 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 25;
-double dt = 0.05;
+size_t N = 10;
+double dt = 0.1;
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -22,7 +22,7 @@ double dt = 0.05;
 const double Lf = 2.67;
 
 // Set a Reference Velocity to which the cost is related
-double ref_v = 100;
+double ref_v = 70;
 
 // Defintion of position of all state variables and actuators. The optimser
 // takes all variables as one vector
@@ -64,6 +64,7 @@ class FG_eval {
     // throttle is a problem that can cause oscillation. Adding them to cost
     // The loop is between N-1 becasue the throttle is applied between every
     // time step.
+    
     for(int t = 0; t < N-1; t++){
         fg[0] += CppAD::pow(vars[delta_start + t], 2);
         fg[0] += CppAD::pow(vars[a_start + t], 2);
@@ -111,7 +112,7 @@ class FG_eval {
         // Using the current fitted polynomial of the desired path measure the
         // needed f0
         AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * CppAD::pow(x0, 2) + coeffs[3] * CppAD::pow(x0, 3);
-        AD<double> psides0 = CppAD::atan(coeffs[1] + coeffs[2] * x0 + coeffs[3] * CppAD::pow(x0, 2));
+        AD<double> psides0 = CppAD::atan(coeffs[1] + 2 * coeffs[2] * x0 + 3 * coeffs[3] * CppAD::pow(x0, 2));
       
         // The equations for the model:
         // x_[t+1] = x[t] + v[t] * cos(psi[t]) * dt
@@ -126,7 +127,7 @@ class FG_eval {
         fg[1 + psi_start + t] = psi1 - (psi0 + v0/Lf * delta0 * dt);
         fg[1 + v_start + t] = v1 - (v0 + a0 * dt);
         fg[1 + cte_start + t] = cte1 - ((f0 - y0) + (v0 * CppAD::sin(epsi0) * dt));
-        fg[1 + epsi_start + t] = (psi1 - psides0) - (v0 / Lf * delta0 * dt);
+        fg[1 + epsi_start + t] = (psi1 - psides0) - (v0/Lf * delta0 * dt);
     }
       
   }
@@ -166,7 +167,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   for (int i = 0; i < n_vars; i++) {
     vars[i] = 0;
   }
-
+  
   // Define lower and upper limits variables for state and actuatots.
   Dvector vars_lowerbound(n_vars);
   Dvector vars_upperbound(n_vars);
@@ -192,14 +193,14 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
     vars_lowerbound[i] = -0.436332;
     vars_upperbound[i] = 0.436332;
   }
-  
+
   // Set upper and lower limit for acceleration to be between -1.0 and 1.0
   // -1.0 full brakes and +1.0 100% acceleration
   for(int i = a_start; i < n_vars; i++){
-    vars_lowerbound = -1.0;
-    vars_upperbound = 1.0;
+    vars_lowerbound[i] = -1.0;
+    vars_upperbound[i] = 1.0;
   }
-
+  cout << "a Cool" << endl;
   // Lower and upper limits for the constraints
   // Should be 0 besides initial state.
   Dvector constraints_lowerbound(n_constraints);
@@ -208,7 +209,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
     constraints_lowerbound[i] = 0;
     constraints_upperbound[i] = 0;
   }
-  
+  cout << "Constraints Cool" << endl;
   // Set lower and upper bound for state variables
   constraints_lowerbound[x_start] = x;
   constraints_upperbound[x_start] = x;

@@ -108,7 +108,7 @@ int main() {
           double throttle_value = j[1]["throttle"];
           
           Eigen::VectorXd way_x(ptsx.size());
-          Eigen::VectorXd way_y(ptsx.size());
+          Eigen::VectorXd way_y(ptsy.size());
           
           for(int i = 0; i < ptsx.size(); i++){
             double delta_x = ptsx[i] - px;
@@ -134,7 +134,6 @@ int main() {
           auto vars = mpc.Solve(state, coeffs);
           steer_value = vars[0];
           throttle_value = vars[1];
-        
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
@@ -167,7 +166,7 @@ int main() {
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
           
-          for(int i = 0; i < 75; i++){
+          for(int i = 0; i < 100; i+=3){
             next_x_vals.push_back(i);
             next_y_vals.push_back(polyeval(coeffs, i));
           }
