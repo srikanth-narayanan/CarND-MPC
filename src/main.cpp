@@ -85,12 +85,18 @@ int main() {
         string event = j[0].get<string>();
         if (event == "telemetry") {
           // j[1] is the data JSON object
+          // X and Y co-ordinates path (Way points)
+          // These values are in global co-ordinate system
+          // has to be converted vehicle co-ordinate system before supplying it
+          // to MPC class
+          // ptsx and ptsy are set of x,y for the waypoints
           vector<double> ptsx = j[1]["ptsx"];
           vector<double> ptsy = j[1]["ptsy"];
           double px = j[1]["x"];
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
+          
 
           /*
           * TODO: Calculate steering angle and throttle using MPC.
@@ -98,13 +104,37 @@ int main() {
           * Both are in between [-1, 1].
           *
           */
-          double steer_value;
-          double throttle_value;
+          double steer_value = j[1]["steering_angle"];
+          double throttle_value = j[1]["throttle"];
+          
+          Eigen::VectorXd way_x(ptsx.size());
+          Eigen::VectorXd way_y(ptsx.size());
+          
+          for(int i = 0; i < ptsx.size(); i++){
+            double delta_x = ptsx[i] - px;
+            double delta_y = ptsy[i] - py;
+            way_x(i) = (delta_x * cos(-psi) - delta_y * sin(-psi));
+            way_y(i) = (delta_x * sin(-psi) + delta_y * cos(-psi));
+          }
+          
+          // Fit polynomial using the waypoints
+          auto coeffs = polyfit(way_x, way_y, 3);
+          double cte = polyeval(coeffs, 0); // Assumption for initial point x=0, y=0
+          double epsi = -atan(coeffs[1]);
+          
+          // Setup initial state
+          Eigen::VectorXd state(6);
+          state << 0, 0, 0, v, cte, epsi;
+          
+          // use mpc to solve
+          auto vars = mpc.Solve(state, coeffs);
+          
+          
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          msgJson["steering_angle"] = steer_value;
+          msgJson["steering_angle"] = steer_value / (deg2rad(25.0));
           msgJson["throttle"] = throttle_value;
 
           //Display the MPC predicted trajectory 
