@@ -22,7 +22,7 @@ double dt = 0.1;
 const double Lf = 2.67;
 
 // Set a Reference Velocity to which the cost is related
-double ref_v = 70;
+double ref_v = 40;
 
 // Defintion of position of all state variables and actuators. The optimser
 // takes all variables as one vector
@@ -66,8 +66,11 @@ class FG_eval {
     // time step.
     
     for(int t = 0; t < N-1; t++){
-        fg[0] += CppAD::pow(vars[delta_start + t], 2);
+        fg[0] += 500 * CppAD::pow(vars[delta_start + t], 2);
         fg[0] += CppAD::pow(vars[a_start + t], 2);
+      
+        // Penalising for combination of steer and Acceleration
+        //fg[0] += CppAD::pow(vars[delta_start + t] * vars[v_start + t], 2);
     }
     
     // Minimize the value gap between actuation.
@@ -109,6 +112,12 @@ class FG_eval {
         AD<double> delta0 = vars[delta_start + t - 1];
         AD<double> a0 = vars[a_start + t - 1];
       
+        // Use previous accel and steer value to account for latency
+        if (t > 1) {
+          a0 = vars[a_start + t - 2];
+          delta0 = vars[delta_start + t -2];
+        }
+      
         // Using the current fitted polynomial of the desired path measure the
         // needed f0
         AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * CppAD::pow(x0, 2) + coeffs[3] * CppAD::pow(x0, 3);
@@ -127,7 +136,7 @@ class FG_eval {
         fg[1 + psi_start + t] = psi1 - (psi0 + v0/Lf * delta0 * dt);
         fg[1 + v_start + t] = v1 - (v0 + a0 * dt);
         fg[1 + cte_start + t] = cte1 - ((f0 - y0) + (v0 * CppAD::sin(epsi0) * dt));
-        fg[1 + epsi_start + t] = (psi1 - psides0) - (v0/Lf * delta0 * dt);
+        fg[1 + epsi_start + t] = epsi1 - ((psi1 - psides0) - (v0/Lf * delta0 * dt));
     }
       
   }
@@ -212,21 +221,17 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   cout << "Constraints Cool" << endl;
   // Set lower and upper bound for state variables
   constraints_lowerbound[x_start] = x;
-  constraints_upperbound[x_start] = x;
-  
   constraints_lowerbound[y_start] = y;
-  constraints_upperbound[y_start] = y;
-  
   constraints_lowerbound[psi_start] = psi;
-  constraints_upperbound[psi_start] = psi;
-  
   constraints_lowerbound[v_start] = v;
-  constraints_upperbound[v_start] = v;
-  
   constraints_lowerbound[cte_start] = cte;
-  constraints_upperbound[cte_start] = cte;
-  
   constraints_lowerbound[epsi_start] = epsi;
+  
+  constraints_upperbound[x_start] = x;
+  constraints_upperbound[y_start] = y;
+  constraints_upperbound[psi_start] = psi;
+  constraints_upperbound[v_start] = v;
+  constraints_upperbound[cte_start] = cte;
   constraints_upperbound[epsi_start] = epsi;
 
   // object that computes objective and constraints

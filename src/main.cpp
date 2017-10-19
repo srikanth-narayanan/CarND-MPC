@@ -107,24 +107,25 @@ int main() {
           double steer_value = j[1]["steering_angle"];
           double throttle_value = j[1]["throttle"];
           
-          Eigen::VectorXd way_x(ptsx.size());
-          Eigen::VectorXd way_y(ptsy.size());
+          vector<double> way_x;
+          vector<double> way_y;
           
           for(int i = 0; i < ptsx.size(); i++){
             double delta_x = ptsx[i] - px;
             double delta_y = ptsy[i] - py;
-            way_x(i) = (delta_x * cos(-psi) - delta_y * sin(-psi));
-            way_y(i) = (delta_x * sin(-psi) + delta_y * cos(-psi));
+            way_x.push_back(delta_x * cos(-psi) - delta_y * sin(-psi));
+            way_y.push_back(delta_x * sin(-psi) + delta_y * cos(-psi));
           }
           
+          double* ptrx = &way_x[0];
+          double* ptry = &way_y[0];
+          Eigen::Map<Eigen::VectorXd> way_x_eig(ptrx, 6);
+          Eigen::Map<Eigen::VectorXd> way_y_eig(ptry, 6);
+          
           // Fit polynomial using the waypoints
-          auto coeffs = polyfit(way_x, way_y, 3);
+          auto coeffs = polyfit(way_x_eig, way_y_eig, 3);
           double cte = polyeval(coeffs, 0); // Assumption for initial point x=0, y=0
           double epsi = -atan(coeffs[1]);
-          
-          cout << coeffs << endl;
-          cout << cte << endl;
-          cout << epsi << endl;
           
           // Setup initial state
           Eigen::VectorXd state(6);
@@ -138,7 +139,7 @@ int main() {
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          msgJson["steering_angle"] = steer_value / (deg2rad(25.0));
+          msgJson["steering_angle"] = steer_value / (deg2rad(25));
           msgJson["throttle"] = throttle_value;
 
           //Display the MPC predicted trajectory 
