@@ -22,7 +22,7 @@ double dt = 0.1;
 const double Lf = 2.67;
 
 // Set a Reference Velocity to which the cost is related
-double ref_v = 70;
+double ref_v = 150;
 
 // Defintion of position of all state variables and actuators. The optimser
 // takes all variables as one vector
@@ -53,11 +53,21 @@ class FG_eval {
     // All cost to be added to this element.
     fg[0] = 0;
     
+    // Define all weights
+    const int cte_weight = 3000;
+    const int epsi_weight = 3000;
+    const int v_weight = 1;
+    const int delta_weight = 25;
+    const int a_weight = 25;
+    const int delta_diff_weight = 5000;
+    const int a_diff_weight = 750;
+    const int combi_weight = 2500;
+    
     // Add all reference state related cost to fg
     for(int t = 0; t < N; t++){
-        fg[0] += 3000 * CppAD::pow(vars[cte_start + t], 2);
-        fg[0] += 3000 * CppAD::pow(vars[epsi_start + t], 2);
-        fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
+        fg[0] += cte_weight * CppAD::pow(vars[cte_start + t], 2);
+        fg[0] += epsi_weight * CppAD::pow(vars[epsi_start + t], 2);
+        fg[0] += v_weight * CppAD::pow(vars[v_start + t] - ref_v, 2);
     }
     
     // We want to minimize the actuator use. This means too much steering or
@@ -66,17 +76,17 @@ class FG_eval {
     // time step.
     
     for(int t = 0; t < N - 1; t++){
-        fg[0] += 5 * CppAD::pow(vars[delta_start + t], 2);
-        fg[0] += 5 * CppAD::pow(vars[a_start + t], 2);
+        fg[0] += delta_weight * CppAD::pow(vars[delta_start + t], 2);
+        fg[0] += a_weight * CppAD::pow(vars[a_start + t], 2);
       
         // Penalising for combination of steer and Acceleration
-        fg[0] += 700 * CppAD::pow(vars[delta_start + t] * vars[v_start + t], 2);
+        fg[0] += combi_weight * CppAD::pow(vars[delta_start + t] * vars[v_start + t], 2);
     }
     
     // Minimize the value gap between actuation.
     for(int t = 0; t < N - 2; t++){
-        fg[0] += 200 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
-        fg[0] += 10 * CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
+        fg[0] += delta_diff_weight * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
+        fg[0] += a_diff_weight * CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
     }
     
     // Setup Model Constraints
@@ -208,7 +218,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
     vars_lowerbound[i] = -1.0;
     vars_upperbound[i] = 1.0;
   }
-  cout << "a Cool" << endl;
+
   // Lower and upper limits for the constraints
   // Should be 0 besides initial state.
   Dvector constraints_lowerbound(n_constraints);
@@ -217,7 +227,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
     constraints_lowerbound[i] = 0;
     constraints_upperbound[i] = 0;
   }
-  cout << "Constraints Cool" << endl;
+
   // Set lower and upper bound for state variables
   constraints_lowerbound[x_start] = x;
   constraints_lowerbound[y_start] = y;
@@ -268,7 +278,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
 
   // Cost
   auto cost = solution.obj_value;
-  std::cout << "Cost " << cost << std::endl;
+  //std::cout << "Cost " << cost << std::endl;
 
   // TODO: Return the first actuator values. The variables can be accessed with
   // `solution.x[i]`.
