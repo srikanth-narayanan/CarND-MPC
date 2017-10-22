@@ -57,11 +57,11 @@ class FG_eval {
     const int cte_weight = 3000;
     const int epsi_weight = 3000;
     const int v_weight = 1;
-    const int delta_weight = 25;
-    const int a_weight = 25;
+    const int delta_weight = 20;
+    const int a_weight = 20;
     const int delta_diff_weight = 5000;
     const int a_diff_weight = 750;
-    const int combi_weight = 2500;
+    const int combi_weight = 2000;
     
     // Add all reference state related cost to fg
     for(int t = 0; t < N; t++){
