@@ -42,7 +42,7 @@ The polynomial was fitted using the poyval function. A 3rd order poynomial is fi
 
 ## Model Predictive Control with Latency
 
-The project recommended to consider a 100 millisecond latency to account for the real world scenarios. The acutal kinematic model depends on the acuations from the previous state, but with a delay of 100ms. In order account for this the equations are altered in lines 125 to 129 of `MPC.cpp`, where a previous state of acutator is considered at the end of the every 1 seonds cycle. Additional all the cost are penalised appopriately with an addition of combined velocity and steer. This enables a smooth steering and cornering.
+The project recommended to consider a 100 millisecond latency to account for the real world scenarios. The acutal kinematic model depends on the acuations from the previous state, but with a delay of 100ms. In order account for this the equations are altered in lines 125 to 129 of `MPC.cpp`, where a previous state of acutator is considered at the end of the every 1 seonds cycle. Additional all the cost are penalised appopriately with an addition of combined velocity and steer. This enables smooth steering and cornering of the vehicle.
 
 ## Dependencies
 
