@@ -23,7 +23,7 @@ The vehicle mode consists of definition of the states and actuators. The followi
 - distance from the desired position or the cross track error, cte
 - orientation error to desired orientation, epsi
 
-The model and state equations are below.
+The model combines state and acutuations from the previous timestep to calculate the current timestep based on the equations below.
 
 - x_[t+1] = x[t] + v[t] * cos(psi[t]) * dt
 - y_[t+1] = y[t] + v[t] * sin(psi[t]) * dt
@@ -32,7 +32,9 @@ The model and state equations are below.
 - cte[t+1] = f(x[t]) - y[t] + v[t] * sin(epsi[t]) * dt
 - epsi[t+1] = psi[t] - psides[t] + v[t] / Lf * delta[t] * dt
 
+## Timestep and Elapsed Duration
 
+The value of N and dt are choosen from the original MPC-line project 10 and 0.1 respectively. This value means the optmiser uses a one second worth of way points to correct the trajectory. The values were tried to be modified to 20 and 0.05 or 8 and 0.125. These mostly resulted in too many waypoints with a given time and resulted in erratic behaviour of the vehicle.
 
 ## Dependencies
 
