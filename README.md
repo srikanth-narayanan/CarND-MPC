@@ -14,7 +14,25 @@ The following are the steps involved in the bulding a MPC for controlling the ve
 
 ## Vehicle Model
 
-The vehicle
+The vehicle mode consists of definition of the states and actuators. The following parameters define the vehicle model.
+
+- vehicle's x position
+- vehicle's y position
+- vehicle's orientation psi
+- vehicle's speed v
+- distance from the desired position or the cross track error, cte
+- orientation error to desired orientation, epsi
+
+The model and state equations are below.
+
+- x_[t+1] = x[t] + v[t] * cos(psi[t]) * dt
+- y_[t+1] = y[t] + v[t] * sin(psi[t]) * dt
+- psi_[t+1] = psi[t] + v[t] / Lf * delta[t] * dt
+- v_[t+1] = v[t] + a[t] * dt
+- cte[t+1] = f(x[t]) - y[t] + v[t] * sin(epsi[t]) * dt
+- epsi[t+1] = psi[t] - psides[t] + v[t] / Lf * delta[t] * dt
+
+
 
 ## Dependencies
 
