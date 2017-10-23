@@ -36,6 +36,14 @@ The model combines state and acutuations from the previous timestep to calculate
 
 The value of N and dt are choosen from the original MPC-line project 10 and 0.1 respectively. This value means the optmiser uses a one second worth of way points to correct the trajectory. The values were tried to be modified to 20 and 0.05 or 8 and 0.125. These mostly resulted in too many waypoints with a given time and resulted in erratic behaviour of the vehicle.
 
+## Polynomial fitting and MPC preprocessing
+
+The polynomial was fitted using the poyval function. A 3rd order poynomial is fitted to the waypoints. Prior fitting the polynomial, in order to simplyfy the process the waypoints are transformed to the vehicle co-ordinate system. This transformation involves centering the co-ordinates around car position x = 0, y = 0 and rotating counter clockwise by -psi as done line lines 109 to 128 in `main.cpp`.
+
+## Model Predictive Control with Latency
+
+The project recommended to consider a 100 millisecond latency to account for the real world scenarios. The acutal kinematic model depends on the acuations from the previous state, but with a delay of 100ms. In order account for this the equations are altered in lines 125 to 129 of `MPC.cpp`, where a previous state of acutator is considered at the end of the every 1 seonds cycle. Additional all the cost are penalised appopriately with an addition of combined velocity and steer. This enables a smooth steering and cornering.
+
 ## Dependencies
 
 * cmake >= 3.5
