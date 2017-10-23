@@ -1,7 +1,20 @@
-# CarND-Controls-MPC
-Self-Driving Car Engineer Nanodegree Program
+# Model Predictive Control
 
----
+This project involves in implementing a model predictive control to steer and accelerate the car around the track. The project incudes using the IPOPT and CPPAD libraries to find the optmised cost and minimise error. The solution will be robust to include a 100ms latency, so as to mimic the real world scenario.
+
+The following are the steps involved in the bulding a MPC for controlling the vehicle.
+
+- Choose appropriate N and dt.
+- Evaluate the way points from the simulator and fit a polynomial.
+- Define the cost functions using the acturators and state.
+- Define the model state equations.
+- Define the constraints for the model.
+- Optmise the cost function with appropriate weights.
+- Return back the optmised steering and throttle value.
+
+## Vehicle Model
+
+The vehicle
 
 ## Dependencies
 
@@ -23,7 +36,6 @@ Self-Driving Car Engineer Nanodegree Program
     cd uWebSockets
     git checkout e94b6e1
     ```
-    Some function signatures have changed in v0.14.x. See [this PR](https://github.com/udacity/CarND-MPC-Project/pull/3) for more details.
 
 * **Ipopt and CppAD:** Please refer to [this document](https://github.com/udacity/CarND-MPC-Project/blob/master/install_Ipopt_CppAD.md) for installation instructions.
 * [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page). This is already part of the repo so you shouldn't have to worry about it.
